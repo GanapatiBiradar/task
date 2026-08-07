@@ -509,9 +509,12 @@
       </div>
       <div class="field-error" id="orderFormError" style="display:none;"></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-outline" id="cancelOrderBtn">Cancel</button>
-      <button class="btn btn-primary" id="saveOrderBtn">Save order</button>
+    <div class="modal-foot" style="justify-content:space-between;">
+      <button class="btn btn-outline" id="deleteOrderBtn" style="display:none; color:#C13B3B; border-color:#E8B9B9;">Delete order</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="btn btn-outline" id="cancelOrderBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveOrderBtn">Save order</button>
+      </div>
     </div>
   </div>
 </div>
@@ -845,6 +848,7 @@
     $('fCustomer').value=''; $('fPhone').value=''; $('fItem').value='';
     $('fQty').value=''; $('fPriority').value='Normal'; $('fAssignee').value=''; $('fNotes').value='';
     $('orderFormError').style.display='none';
+    $('deleteOrderBtn').style.display='none';
     buildStageTrack('Follow-up Calls');
     $('orderOverlay').classList.add('open');
     $('fCustomer').focus();
@@ -863,6 +867,7 @@
     $('fAssignee').value = o.AssignedTo||'';
     $('fNotes').value = o.Notes||'';
     $('orderFormError').style.display='none';
+    $('deleteOrderBtn').style.display='inline-flex';
     buildStageTrack(o.Stage);
     $('orderOverlay').classList.add('open');
   }
@@ -922,6 +927,27 @@
     }
   }
 
+  function deleteOrder(){
+    if(!state.editingOrderId) return;
+    var id = state.editingOrderId;
+    var order = state.orders.find(function(x){ return x.OrderID===id; });
+    var label = order ? (order.Customer + ' — ' + order.Item) : id;
+    var ok = window.confirm('Delete this order?\n\n' + label + '\n\nThis removes it from the Google Sheet and cannot be undone.');
+    if(!ok) return;
+
+    var backupList = state.orders.slice();
+    state.orders = state.orders.filter(function(x){ return x.OrderID!==id; });
+    render();
+    closeOrderModal();
+
+    apiPost({ action:'delete', orderId:id })
+      .then(function(){ rebuildPeopleList(); })
+      .catch(function(){
+        state.orders = backupList;
+        render();
+      });
+  }
+
   // ---------- settings ----------
   function openSettings(){
     $('settingsUrl').value = state.scriptUrl;
@@ -965,6 +991,7 @@
     $('closeOrderModal').addEventListener('click', closeOrderModal);
     $('cancelOrderBtn').addEventListener('click', closeOrderModal);
     $('saveOrderBtn').addEventListener('click', saveOrder);
+    $('deleteOrderBtn').addEventListener('click', deleteOrder);
     $('orderOverlay').addEventListener('click', function(e){ if(e.target.id==='orderOverlay') closeOrderModal(); });
 
     $('settingsBtn').addEventListener('click', openSettings);
