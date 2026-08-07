@@ -529,7 +529,7 @@
       <div class="field">
         <label>Apps Script web app URL</label>
         <input id="settingsUrl" type="text" placeholder="https://script.google.com/macros/s/…/exec">
-        <div class="datalist-hint">This is shared across everyone using this tracker — changing it points the whole team at a different sheet.</div>
+        <div class="datalist-hint">Saved in this browser only. Paste the same URL once on every device or computer your team uses to open this page.</div>
       </div>
       <div class="field-error" id="settingsError" style="display:none;"></div>
     </div>
@@ -621,14 +621,26 @@
     $('syncLabel').textContent = label;
   }
 
-  // ---------- persistence of connection URL (shared across the team) ----------
+  // ---------- persistence of connection URL ----------
+  // Uses plain browser localStorage so this works on any real hosting
+  // (GitHub Pages, etc). Each browser/device remembers its own connection
+  // once you paste the URL in — you only need to do it once per device.
+  var STORAGE_KEY = 'noblePrintScriptUrl';
   function loadConfig(){
-    return window.storage.get('scriptUrl', true).then(function(r){
-      state.scriptUrl = (r && r.value) ? r.value : '';
-    }).catch(function(){ state.scriptUrl=''; });
+    try {
+      state.scriptUrl = localStorage.getItem(STORAGE_KEY) || '';
+    } catch (err) {
+      state.scriptUrl = '';
+    }
+    return Promise.resolve();
   }
   function saveConfig(url){
-    return window.storage.set('scriptUrl', url, true);
+    try {
+      localStorage.setItem(STORAGE_KEY, url);
+    } catch (err) {
+      showBanner('Could not save the connection in this browser. Private/incognito windows sometimes block this.', 'error');
+    }
+    return Promise.resolve();
   }
 
   // ---------- demo data ----------
