@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Noble Print India — Order Tracker</title>
+
+<!-- Add-to-home-screen / standalone app behavior -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#101827">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Noble Print">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEAE0;
+    --paper-2:#E3DFD1;
+    --ink:#1B2A4A;
+    --ink-2:#101827;
+    --line:#CFC9B6;
+    --cyan:#00AEEF;
+    --magenta:#EC1E79;
+    --yellow:#E3A400;
+    --key:#14141A;
+    --slate:#8B8D98;
+    --navy:#3B4A72;
+    --teal:#0E8F7F;
+    --gold:#B08D2E;
+    --danger:#C13B3B;
+    --card:#FBFAF6;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(16,24,39,0.06), 0 1px 1px rgba(16,24,39,0.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink-2);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  ::selection{ background:var(--yellow); color:var(--ink-2); }
+
+  /* ---------- Header ---------- */
+  header.top{
+    background:var(--ink-2);
+    color:var(--paper);
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    position:sticky;
+    top:0;
+    z-index:40;
+    border-bottom:3px solid var(--ink);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:36px; height:36px;
+    flex-shrink:0;
+    background:var(--paper);
+    border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    padding:5px;
+    box-sizing:border-box;
+  }
+  .brand-mark img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .brand-text{ display:flex; flex-direction:column; line-height:1.05; }
+  .brand-text .name{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    letter-spacing:0.02em;
+    font-size:19px;
+    text-transform:uppercase;
+  }
+  .brand-text .tag{
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#9AA3B8;
+    margin-top:2px;
+  }
+  .top-spacer{ flex:1; }
+  .top-actions{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.18);
+    color:var(--paper);
+    width:36px; height:36px;
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.32); }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    padding:9px 16px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    transition:transform .1s ease, filter .15s ease;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn-primary{ background:var(--magenta); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.07); }
+  .btn-ghost{ background:transparent; color:var(--paper); border:1px solid rgba(255,255,255,0.24); }
+  .btn-ghost:hover{ background:rgba(255,255,255,0.08); }
+  .btn-dark{ background:var(--ink-2); color:#fff; }
+  .btn-outline{ background:transparent; border:1px solid var(--line); color:var(--ink-2); }
+  .btn-outline:hover{ background:var(--paper-2); }
+  .btn-sm{ padding:6px 11px; font-size:12.5px; }
+
+  .sync-pill{
+    display:flex; align-items:center; gap:6px;
+    font-size:11.5px; color:#9AA3B8;
+    font-family:'IBM Plex Mono', monospace;
+    padding:5px 10px;
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:20px;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--slate); flex-shrink:0; }
+  .dot.live{ background:#3FC98A; box-shadow:0 0 0 3px rgba(63,201,138,0.18); }
+  .dot.err{ background:var(--danger); }
+  .dot.pulse{ animation:pulse 1.1s infinite ease-in-out; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex; align-items:center; gap:10px;
+    padding:14px 20px 10px 20px;
+    flex-wrap:wrap;
+  }
+  .search-wrap{
+    position:relative; flex:1; min-width:180px; max-width:340px;
+  }
+  .search-wrap input{
+    width:100%;
+    padding:9px 12px 9px 32px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    color:var(--ink-2);
+  }
+  .search-wrap input:focus{ outline:2px solid var(--cyan); outline-offset:-1px; }
+  .search-wrap svg{ position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; opacity:.5; }
+  select.filter{
+    padding:9px 10px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--ink-2);
+  }
+  .stat-strip{
+    display:flex; gap:14px; margin-left:auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink);
+    opacity:.75;
+  }
+
+  /* ---------- Board ---------- */
+  .board{
+    display:flex;
+    gap:14px;
+    padding:6px 20px 40px 20px;
+    overflow-x:auto;
+    align-items:flex-start;
+  }
+  .column{
+    background:rgba(255,255,255,0.35);
+    border:1px solid var(--line);
+    border-radius:12px;
+    min-width:250px;
+    max-width:250px;
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    max-height:calc(100vh - 168px);
+  }
+  .column-head{
+    padding:12px 12px 10px 12px;
+    border-bottom:1px solid var(--line);
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .column-head .row1{ display:flex; align-items:center; gap:8px; }
+  .chip{ width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .column-title{
+    font-family:'Oswald', sans-serif;
+    font-size:13.5px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    font-weight:600;
+    color:var(--ink-2);
+  }
+  .column-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:#71757e;
+    margin-left:auto;
+    background:var(--paper-2);
+    padding:1px 7px;
+    border-radius:20px;
+  }
+  .column-body{
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    overflow-y:auto;
+  }
+  .column-body::-webkit-scrollbar{ width:6px; }
+  .column-body::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
+  .empty-col{
+    font-size:12px;
+    color:#9a9689;
+    text-align:center;
+    padding:18px 6px;
+    font-style:italic;
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--slate);
+    border-radius:8px;
+    padding:10px 11px;
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    transition:box-shadow .15s ease, transform .1s ease;
+  }
+  .card:hover{ box-shadow:0 3px 10px rgba(16,24,39,0.12); transform:translateY(-1px); }
+  .card .oid{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:#9a9689;
+    margin-bottom:4px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .prio{ font-size:10px; padding:1px 6px; border-radius:10px; font-weight:600; text-transform:uppercase; letter-spacing:.02em; }
+  .prio.high{ background:#FBE2E2; color:var(--danger); }
+  .prio.normal{ background:transparent; color:#9a9689; }
+  .prio.rush{ background:#FDEBC8; color:#8a5b00; }
+  .prio.hold{ background:#E4E7F0; color:#3B4A72; }
+  .card-hold{ opacity:0.68; border-style:dashed; }
+  .card .customer{
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--ink-2);
+    margin-bottom:2px;
+  }
+  .card .item{
+    font-size:12.5px;
+    color:#4b5266;
+    margin-bottom:8px;
+    line-height:1.35;
+  }
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .avatar{
+    width:22px; height:22px;
+    border-radius:50%;
+    background:var(--navy);
+    color:#fff;
+    font-size:10px;
+    font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    font-family:'Inter',sans-serif;
+  }
+  .assignee{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:#4b5266; }
+  .unassigned{ color:#b0ab9b; font-style:italic; }
+  .move-btns{ display:flex; gap:3px; }
+  .move-btns button{
+    width:20px; height:20px;
+    border-radius:5px;
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    padding:0;
+  }
+  .move-btns button:hover{ background:var(--paper-2); }
+  .move-btns button:disabled{ opacity:.25; cursor:default; }
+  .move-btns svg{ width:11px; height:11px; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(16,20,30,0.55);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:5vh 16px;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--card);
+    border-radius:14px;
+    width:100%; max-width:480px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.35);
+    overflow:hidden;
+  }
+  .modal-head{
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--ink-2);
+    color:#fff;
+  }
+  .modal-head h3{
+    margin:0; font-family:'Oswald', sans-serif; font-weight:600;
+    font-size:16px; text-transform:uppercase; letter-spacing:.02em;
+  }
+  .modal-head button{
+    background:transparent; border:none; color:#fff; cursor:pointer;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    opacity:.7; border-radius:6px;
+  }
+  .modal-head button:hover{ opacity:1; background:rgba(255,255,255,0.1); }
+  .modal-body{ padding:18px 20px; display:flex; flex-direction:column; gap:13px; }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{
+    font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#6b7185;
+  }
+  .field input, .field select, .field textarea{
+    padding:9px 11px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    background:#fff;
+    color:var(--ink-2);
+    width:100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid var(--cyan); outline-offset:-1px; }
+  .field textarea{ resize:vertical; min-height:56px; font-family:'Inter',sans-serif; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+  .modal-foot{
+    padding:14px 20px 20px 20px;
+    display:flex; justify-content:flex-end; gap:8px;
+    border-top:1px solid var(--line);
+  }
+  .datalist-hint{ font-size:11px; color:#9a9689; margin-top:2px; }
+  .stage-track{ display:flex; flex-wrap:wrap; gap:6px; }
+  .stage-opt{
+    padding:6px 10px; border-radius:20px; font-size:12px; cursor:pointer;
+    border:1px solid var(--line); background:#fff; color:#4b5266; font-weight:500;
+  }
+  .stage-opt.active{ color:#fff; border-color:transparent; }
+  .field-error{ color:var(--danger); font-size:12px; }
+
+  /* ---------- Setup screen ---------- */
+  .setup{
+    max-width:560px; margin:8vh auto; padding:0 20px;
+  }
+  .setup-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:28px 26px; box-shadow:var(--shadow);
+  }
+  .setup-card h2{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; font-size:20px;
+    margin:0 0 6px 0; color:var(--ink-2);
+  }
+  .setup-card p{ font-size:13.5px; color:#4b5266; line-height:1.55; margin:0 0 16px 0; }
+  .setup-card ol{ font-size:13px; color:#4b5266; line-height:1.7; padding-left:20px; margin:0 0 18px 0; }
+  .setup-card code{
+    background:var(--paper-2); padding:1px 6px; border-radius:4px; font-family:'IBM Plex Mono', monospace; font-size:12px;
+  }
+  .setup-actions{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+  .banner{
+    background:#FDEBC8; border:1px solid #E3C583; color:#7a5300;
+    font-size:12.5px; padding:9px 14px; border-radius:8px; margin:0 20px 4px 20px;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  /* ---------- Rush alerts ---------- */
+  .alerts-btn{
+    display:flex; align-items:center; gap:6px;
+  }
+  .alerts-btn .badge{
+    background:var(--danger); color:#fff;
+    font-size:10px; font-weight:700;
+    min-width:16px; height:16px; padding:0 4px;
+    border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .alerts-btn.on{ border-color:#3FC98A; color:#3FC98A; }
+
+  .rush-overlay{
+    position:fixed; inset:0;
+    background:rgba(90,10,10,0.55);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:200;
+    padding:20px;
+  }
+  .rush-overlay.open{ display:flex; }
+  .rush-box{
+    background:#fff;
+    border:3px solid var(--danger);
+    border-radius:14px;
+    max-width:420px; width:100%;
+    overflow:hidden;
+    animation:rushPulse 1s infinite;
+  }
+  @keyframes rushPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(193,59,59,0.55); }
+    50%{ box-shadow:0 0 0 16px rgba(193,59,59,0); }
+  }
+  .rush-head{
+    background:var(--danger); color:#fff;
+    padding:16px 20px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .rush-head svg{ width:22px; height:22px; animation:rushShake 0.6s infinite; flex-shrink:0; }
+  @keyframes rushShake{
+    0%,100%{ transform:rotate(0deg); }
+    25%{ transform:rotate(-10deg); }
+    75%{ transform:rotate(10deg); }
+  }
+  .rush-head h3{
+    margin:0; font-family:'Oswald', sans-serif; text-transform:uppercase;
+    letter-spacing:.03em; font-size:16.5px;
+  }
+  .rush-body{ padding:18px 20px; }
+  .rush-body .oid{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#9a9689; margin-bottom:6px; }
+  .rush-body .cust{ font-size:17px; font-weight:700; color:var(--ink-2); margin-bottom:4px; }
+  .rush-body .itm{ font-size:13.5px; color:#4b5266; margin-bottom:4px; line-height:1.4; }
+  .rush-body .stg{ font-size:12px; color:#8a5b00; background:#FDEBC8; display:inline-block; padding:2px 9px; border-radius:20px; margin-top:8px; }
+  .rush-foot{ padding:14px 20px 20px 20px; display:flex; gap:8px; border-top:1px solid var(--line); }
+  .rush-foot button{ flex:1; justify-content:center; }
+  .btn-danger{ background:var(--danger); color:#fff; }
+  .btn-danger:hover{ filter:brightness(1.08); }
+
+  @media (max-width:640px){
+    .brand-text .tag{ display:none; }
+    .stat-strip{ display:none; }
+    .toolbar{ padding:12px 14px 8px 14px; }
+    .board{ padding:6px 14px 32px 14px; }
+    header.top{ padding:12px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <span class="brand-mark"><img src="logo-mark.png" alt="Noble Print India"></span>
+    <div class="brand-text">
+      <span class="name">Noble Print India</span>
+      <span class="tag">Order Production Tracker</span>
+    </div>
+  </div>
+  <div class="top-spacer"></div>
+  <div class="top-actions">
+    <span class="sync-pill" id="syncPill"><span class="dot" id="syncDot"></span><span id="syncLabel">Not connected</span></span>
+    <button class="icon-btn alerts-btn" id="alertsBtn" title="Rush order alerts">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="badge" id="alertsBadge" style="display:none;">0</span>
+    </button>
+    <button class="icon-btn" id="refreshBtn" title="Refresh">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.35M21 4v6h-6"/></svg>
+    </button>
+    <button class="icon-btn" id="settingsBtn" title="Connection settings">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+    </button>
+    <button class="btn btn-primary btn-sm" id="newOrderBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      New Order
+    </button>
+  </div>
+</header>
+
+<div id="bannerWrap"></div>
+
+<div id="setupScreen" class="setup" style="display:none;">
+  <div class="setup-card">
+    <h2>Connect your Google Sheet</h2>
+    <p>Noble Print India's tracker reads and writes directly to a Google Sheet through a small Apps Script that lives inside that sheet. No separate server, no API keys to manage.</p>
+    <ol>
+      <li>Open (or create) the Google Sheet you want to use as the order log.</li>
+      <li>Go to <code>Extensions → Apps Script</code>, delete the placeholder code, and paste in the script from the setup guide below.</li>
+      <li>Click <code>Deploy → New deployment → Web app</code>. Set "Execute as" to <b>Me</b> and "Who has access" to <b>Anyone</b>.</li>
+      <li>Copy the deployment URL it gives you and paste it below.</li>
+    </ol>
+    <div class="field">
+      <label for="setupUrl">Apps Script web app URL</label>
+      <input id="setupUrl" type="text" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-dark" id="setupConnectBtn">Connect sheet</button>
+      <button class="btn btn-outline" id="setupDemoBtn">Explore with demo data</button>
+      <button class="btn btn-outline" id="setupGuideBtn">View full setup guide</button>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar" id="toolbar" style="display:none;">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Search customer, item, order ID…">
+  </div>
+  <select class="filter" id="assigneeFilter"><option value="">Everyone</option></select>
+  <select class="filter" id="priorityFilter">
+    <option value="">All priorities</option>
+    <option value="Rush">Rush</option>
+    <option value="High">High</option>
+    <option value="Normal">Normal</option>
+    <option value="Hold">Hold</option>
+  </select>
+  <div class="stat-strip" id="statStrip"></div>
+</div>
+
+<div class="board" id="board" style="display:none;"></div>
+
+<!-- Order modal -->
+<div class="overlay" id="orderOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="orderModalTitle">New Order</h3>
+      <button id="closeOrderModal" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label>Customer name</label>
+          <input id="fCustomer" type="text" placeholder="e.g. Anand Traders">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input id="fPhone" type="text" placeholder="10-digit number">
+        </div>
+      </div>
+      <div class="field">
+        <label>Item / print job</label>
+        <input id="fItem" type="text" placeholder="e.g. Custom mugs — logo print">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Quantity</label>
+          <input id="fQty" type="number" min="1" placeholder="100">
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="fPriority">
+            <option>Normal</option>
+            <option>High</option>
+            <option>Rush</option>
+            <option>Hold</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Assigned to</label>
+        <input id="fAssignee" list="peopleList" type="text" placeholder="Type a name — can be anybody">
+        <datalist id="peopleList"></datalist>
+      </div>
+      <div class="field">
+        <label>Stage</label>
+        <div class="stage-track" id="fStageTrack"></div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="fNotes" placeholder="Design file link, special instructions, etc."></textarea>
+      </div>
+      <div class="field-error" id="orderFormError" style="display:none;"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between;">
+      <button class="btn btn-outline" id="deleteOrderBtn" style="display:none; color:#C13B3B; border-color:#E8B9B9;">Delete order</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="btn btn-outline" id="cancelOrderBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveOrderBtn">Save order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Connection Settings</h3>
+      <button id="closeSettingsModal" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Apps Script web app URL</label>
+        <input id="settingsUrl" type="text" placeholder="https://script.google.com/macros/s/…/exec">
+        <div class="datalist-hint">Saved in this browser only. Paste the same URL once on every device or computer your team uses to open this page.</div>
+      </div>
+      <div class="field-error" id="settingsError" style="display:none;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="viewGuideFromSettings">Setup guide</button>
+      <button class="btn btn-primary" id="saveSettingsBtn">Save & reconnect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup guide modal -->
+<div class="overlay" id="guideOverlay">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-head">
+      <h3>Google Sheet Setup Guide</h3>
+      <button id="closeGuideModal" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="font-size:13px; color:#3d4358; line-height:1.6;">
+      <p><b>1. Create the sheet.</b> Make a new Google Sheet. Rename the first tab to <code>Orders</code> and add this header row exactly:</p>
+      <p><code>OrderID | Customer | Phone | Item | Quantity | Stage | AssignedTo | Priority | Notes | CreatedAt | UpdatedAt</code></p>
+      <p><b>2. Add the script.</b> In the sheet, open <code>Extensions → Apps Script</code>, clear the default code, paste the script provided separately, and save.</p>
+      <p><b>3. Deploy it.</b> Click <code>Deploy → New deployment</code>, choose type <b>Web app</b>, set "Execute as" to <b>Me</b>, and "Who has access" to <b>Anyone</b>. Deploy and authorize when prompted.</p>
+      <p><b>4. Connect.</b> Copy the web app URL ending in <code>/exec</code> and paste it into this app's connection settings.</p>
+      <p>Every new order and every stage or assignment change writes straight back to that <code>Orders</code> tab, so the sheet stays the single source of truth for the whole team.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-dark" id="closeGuideModal2">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rush alert modal -->
+<div class="rush-overlay" id="rushOverlay">
+  <div class="rush-box">
+    <div class="rush-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <h3>Rush Order Needs Attention</h3>
+    </div>
+    <div class="rush-body">
+      <div class="oid" id="rushOid"></div>
+      <div class="cust" id="rushCustomer"></div>
+      <div class="itm" id="rushItem"></div>
+      <span class="stg" id="rushStage"></span>
+    </div>
+    <div class="rush-foot">
+      <button class="btn btn-outline" id="rushSnoozeBtn">Snooze 5 min</button>
+      <button class="btn btn-danger" id="rushDismissBtn">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STAGES = [
+    { id:'Follow-up Calls', label:'Follow-up Calls', color:'#8B8D98' },
+    { id:'Designing',       label:'Designing',       color:'#00AEEF' },
+    { id:'Purchasing',      label:'Purchasing',      color:'#3B4A72' },
+    { id:'Printing',        label:'Printing',        color:'#EC1E79' },
+    { id:'Packing',         label:'Packing',         color:'#E3A400' },
+    { id:'Delivering',      label:'Delivering',      color:'#0E8F7F' },
+    { id:'Billing',         label:'Billing',         color:'#14141A' }
+  ];
+
+  var state = {
+    scriptUrl:'',
+    orders:[],
+    people:[],
+    search:'',
+    assigneeFilter:'',
+    priorityFilter:'',
+    demoMode:false,
+    editingOrderId:null,
+    alertsEnabled:false
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function initials(name){
+    if(!name) return '?';
+    var parts = name.trim().split(/\s+/);
+    var s = parts[0][0] || '';
+    if(parts.length>1) s += parts[parts.length-1][0];
+    return s.toUpperCase();
+  }
+
+  function escapeHtml(str){
+    return String(str==null?'':str).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function stageColor(id){
+    var s = STAGES.find(function(x){ return x.id===id; });
+    return s ? s.color : '#8B8D98';
+  }
+
+  function showBanner(msg, kind){
+    var wrap = $('bannerWrap');
+    wrap.innerHTML = '<div class="banner">'+ (kind==='error' ? '⚠' : 'ℹ') +' <span>'+escapeHtml(msg)+'</span></div>';
+  }
+  function clearBanner(){ $('bannerWrap').innerHTML=''; }
+
+  function setSync(mode, label){
+    var dot = $('syncDot');
+    dot.className = 'dot' + (mode==='live' ? ' live' : mode==='err' ? ' err' : mode==='busy' ? ' pulse' : '');
+    $('syncLabel').textContent = label;
+  }
+
+  // ---------- persistence of connection URL ----------
+  // Uses plain browser localStorage so this works on any real hosting
+  // (GitHub Pages, etc). Each browser/device remembers its own connection
+  // once you paste the URL in — you only need to do it once per device.
+  var STORAGE_KEY = 'noblePrintScriptUrl';
+  function loadConfig(){
+    try {
+      state.scriptUrl = localStorage.getItem(STORAGE_KEY) || '';
+    } catch (err) {
+      state.scriptUrl = '';
+    }
+    return Promise.resolve();
+  }
+  function saveConfig(url){
+    try {
+      localStorage.setItem(STORAGE_KEY, url);
+    } catch (err) {
+      showBanner('Could not save the connection in this browser. Private/incognito windows sometimes block this.', 'error');
+    }
+    return Promise.resolve();
+  }
+
+  // ---------- demo data ----------
+  function demoOrders(){
+    var now = new Date().toISOString();
+    return [
+      {OrderID:'NP-DEMO-1', Customer:'Anand Traders', Phone:'9820011223', Item:'Custom ceramic mugs — logo print', Quantity:'150', Stage:'Printing', AssignedTo:'Rakesh', Priority:'High', Notes:'Client wants gold foil on logo.', CreatedAt:now, UpdatedAt:now},
+      {OrderID:'NP-DEMO-2', Customer:'Sunrise School', Phone:'9833344556', Item:'Annual day t-shirts', Quantity:'400', Stage:'Follow-up Calls', AssignedTo:'', Priority:'Normal', Notes:'Awaiting size chart from client.', CreatedAt:now, UpdatedAt:now},
+      {OrderID:'NP-DEMO-3', Customer:'Kalpana Events', Phone:'9911223344', Item:'Wedding invitation cards', Quantity:'600', Stage:'Designing', AssignedTo:'Meera', Priority:'Rush', Notes:'Deliver by Friday.', CreatedAt:now, UpdatedAt:now},
+      {OrderID:'NP-DEMO-4', Customer:'Om Enterprises', Phone:'9765432198', Item:'Vinyl banners — shop opening', Quantity:'6', Stage:'Packing', AssignedTo:'Suresh', Priority:'Normal', Notes:'', CreatedAt:now, UpdatedAt:now},
+      {OrderID:'NP-DEMO-5', Customer:'Patil Motors', Phone:'9822233445', Item:'Branded keychains', Quantity:'1000', Stage:'Purchasing', AssignedTo:'Rakesh', Priority:'Normal', Notes:'Waiting on blank keychain stock.', CreatedAt:now, UpdatedAt:now},
+      {OrderID:'NP-DEMO-6', Customer:'Deshmukh & Sons', Phone:'9898765432', Item:'Letterhead + envelopes', Quantity:'2000', Stage:'Delivering', AssignedTo:'Vikram', Priority:'Normal', Notes:'Delivery scheduled tomorrow AM.', CreatedAt:now, UpdatedAt:now},
+      {OrderID:'NP-DEMO-7', Customer:'Green Leaf Cafe', Phone:'9776655443', Item:'Menu cards, laminated', Quantity:'80', Stage:'Billing', AssignedTo:'Meera', Priority:'Normal', Notes:'Invoice pending GST number.', CreatedAt:now, UpdatedAt:now}
+    ];
+  }
+
+  // ---------- API calls ----------
+  function apiGet(){
+    if(state.demoMode){
+      return Promise.resolve(state.orders.length ? state.orders : demoOrders());
+    }
+    setSync('busy','Syncing…');
+    return fetch(state.scriptUrl, { method:'GET' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(data){
+        if(!data.success) throw new Error(data.error || 'Sheet returned an error');
+        setSync('live','Connected');
+        clearBanner();
+        return data.orders || [];
+      })
+      .catch(function(err){
+        setSync('err','Connection failed');
+        showBanner('Could not reach the Google Sheet (' + err.message + '). Check the web app URL in settings and that it is deployed with access set to "Anyone".', 'error');
+        throw err;
+      });
+  }
+
+  function apiPost(payload){
+    if(state.demoMode){
+      return Promise.resolve({success:true, _local:true});
+    }
+    setSync('busy','Saving…');
+    return fetch(state.scriptUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(data){
+        if(!data.success) throw new Error(data.error || 'Sheet rejected the write');
+        setSync('live','Connected');
+        return data;
+      })
+      .catch(function(err){
+        setSync('err','Save failed');
+        showBanner('Could not save to the Google Sheet (' + err.message + '). Your change was not recorded — please retry.', 'error');
+        throw err;
+      });
+  }
+
+  function refreshOrders(){
+    return apiGet().then(function(orders){
+      state.orders = orders;
+      rebuildPeopleList();
+      render();
+      checkRushAlarms();
+    }).catch(function(){ /* banner already shown */ });
+  }
+
+  function rebuildPeopleList(){
+    var set = {};
+    state.orders.forEach(function(o){ if(o.AssignedTo) set[o.AssignedTo]=true; });
+    state.people = Object.keys(set).sort();
+    var dl = $('peopleList');
+    dl.innerHTML = state.people.map(function(p){ return '<option value="'+escapeHtml(p)+'">'; }).join('');
+    var filt = $('assigneeFilter');
+    var current = filt.value;
+    filt.innerHTML = '<option value="">Everyone</option>' + state.people.map(function(p){
+      return '<option value="'+escapeHtml(p)+'">'+escapeHtml(p)+'</option>';
+    }).join('');
+    filt.value = current;
+  }
+
+  // ---------- rendering ----------
+  function matchesFilters(o){
+    if(state.assigneeFilter && o.AssignedTo !== state.assigneeFilter) return false;
+    if(state.priorityFilter && o.Priority !== state.priorityFilter) return false;
+    if(state.search){
+      var q = state.search.toLowerCase();
+      var hay = [o.Customer,o.Item,o.OrderID,o.Notes].join(' ').toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  }
+
+  function render(){
+    var board = $('board');
+    var filtered = state.orders.filter(matchesFilters);
+
+    var html = STAGES.map(function(stage, idx){
+      var items = filtered.filter(function(o){ return o.Stage===stage.id; });
+      var cards = items.length ? items.map(function(o){ return cardHtml(o, idx); }).join('') :
+        '<div class="empty-col">No orders here</div>';
+      return (
+        '<div class="column">' +
+          '<div class="column-head">' +
+            '<div class="row1">' +
+              '<span class="chip" style="background:'+stage.color+'"></span>' +
+              '<span class="column-title">'+escapeHtml(stage.label)+'</span>' +
+              '<span class="column-count">'+items.length+'</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="column-body">'+cards+'</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    board.innerHTML = html;
+
+    if(typeof updateAlertsButton === 'function'){ updateAlertsButton(); }
+
+    // stat strip
+    $('statStrip').innerHTML =
+      '<span>'+state.orders.length+' total</span>' +
+      '<span>'+state.orders.filter(isRushOrder).length+' rush</span>' +
+      '<span>'+state.orders.filter(function(o){return !o.AssignedTo;}).length+' unassigned</span>';
+
+    // wire up card clicks + move buttons
+    board.querySelectorAll('[data-open]').forEach(function(el){
+      el.addEventListener('click', function(e){
+        if(e.target.closest('[data-move]')) return;
+        openEdit(el.getAttribute('data-open'));
+      });
+    });
+    board.querySelectorAll('[data-move]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        var dir = btn.getAttribute('data-move');
+        moveStage(id, dir);
+      });
+    });
+  }
+
+  function cardHtml(o, stageIdx){
+    var prioClass = o.Priority==='Rush' ? 'rush' : o.Priority==='High' ? 'high' : o.Priority==='Hold' ? 'hold' : 'normal';
+    var isHold = o.Priority==='Hold';
+    var canPrev = stageIdx>0;
+    var canNext = stageIdx<STAGES.length-1;
+    return (
+      '<div class="card'+(isHold?' card-hold':'')+'" style="border-left-color:'+stageColor(o.Stage)+'" data-open="'+escapeHtml(o.OrderID)+'">' +
+        '<div class="oid"><span>'+escapeHtml(o.OrderID)+'</span>' +
+          (o.Priority && o.Priority!=='Normal' ? '<span class="prio '+prioClass+'">'+escapeHtml(o.Priority)+'</span>' : '') +
+        '</div>' +
+        '<div class="customer">'+escapeHtml(o.Customer||'Untitled order')+'</div>' +
+        '<div class="item">'+escapeHtml(o.Item||'')+(o.Quantity ? ' · Qty '+escapeHtml(o.Quantity) : '')+'</div>' +
+        '<div class="card-foot">' +
+          (o.AssignedTo ?
+            '<span class="assignee"><span class="avatar">'+initials(o.AssignedTo)+'</span>'+escapeHtml(o.AssignedTo)+'</span>' :
+            '<span class="assignee unassigned">Unassigned</span>') +
+          '<span class="move-btns">' +
+            '<button data-move="prev" data-id="'+escapeHtml(o.OrderID)+'" '+(canPrev?'':'disabled')+' title="Move back">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+            '<button data-move="next" data-id="'+escapeHtml(o.OrderID)+'" '+(canNext?'':'disabled')+' title="Move forward">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 6l6 6-6 6"/></svg></button>' +
+          '</span>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function moveStage(orderId, dir){
+    var o = state.orders.find(function(x){ return x.OrderID===orderId; });
+    if(!o) return;
+    var idx = STAGES.findIndex(function(s){ return s.id===o.Stage; });
+    var newIdx = dir==='next' ? idx+1 : idx-1;
+    if(newIdx<0 || newIdx>=STAGES.length) return;
+    var newStage = STAGES[newIdx].id;
+    var prevStage = o.Stage;
+    o.Stage = newStage; // optimistic
+    render();
+    apiPost({ action:'update', orderId:orderId, updates:{ Stage:newStage } })
+      .catch(function(){ o.Stage = prevStage; render(); });
+  }
+
+  // ---------- order modal ----------
+  function buildStageTrack(selected){
+    var track = $('fStageTrack');
+    track.innerHTML = STAGES.map(function(s){
+      var active = s.id===selected;
+      return '<span class="stage-opt'+(active?' active':'')+'" data-stage="'+escapeHtml(s.id)+'" style="'+(active?('background:'+s.color+';'):'')+'">'+escapeHtml(s.label)+'</span>';
+    }).join('');
+    track.querySelectorAll('.stage-opt').forEach(function(el){
+      el.addEventListener('click', function(){
+        track.querySelectorAll('.stage-opt').forEach(function(o2){ o2.classList.remove('active'); o2.style.background=''; o2.style.color=''; });
+        el.classList.add('active');
+        el.style.background = stageColor(el.getAttribute('data-stage'));
+        el.style.color = '#fff';
+      });
+    });
+  }
+
+  function openNew(){
+    state.editingOrderId = null;
+    $('orderModalTitle').textContent = 'New Order';
+    $('fCustomer').value=''; $('fPhone').value=''; $('fItem').value='';
+    $('fQty').value=''; $('fPriority').value='Normal'; $('fAssignee').value=''; $('fNotes').value='';
+    $('orderFormError').style.display='none';
+    $('deleteOrderBtn').style.display='none';
+    buildStageTrack('Follow-up Calls');
+    $('orderOverlay').classList.add('open');
+    $('fCustomer').focus();
+  }
+
+  function openEdit(orderId){
+    var o = state.orders.find(function(x){ return x.OrderID===orderId; });
+    if(!o) return;
+    state.editingOrderId = orderId;
+    $('orderModalTitle').textContent = 'Edit Order · ' + o.OrderID;
+    $('fCustomer').value = o.Customer||'';
+    $('fPhone').value = o.Phone||'';
+    $('fItem').value = o.Item||'';
+    $('fQty').value = o.Quantity||'';
+    $('fPriority').value = o.Priority||'Normal';
+    $('fAssignee').value = o.AssignedTo||'';
+    $('fNotes').value = o.Notes||'';
+    $('orderFormError').style.display='none';
+    $('deleteOrderBtn').style.display='inline-flex';
+    buildStageTrack(o.Stage);
+    $('orderOverlay').classList.add('open');
+  }
+
+  function closeOrderModal(){ $('orderOverlay').classList.remove('open'); }
+
+  function currentStageSelection(){
+    var active = document.querySelector('#fStageTrack .stage-opt.active');
+    return active ? active.getAttribute('data-stage') : STAGES[0].id;
+  }
+
+  function saveOrder(){
+    var customer = $('fCustomer').value.trim();
+    var item = $('fItem').value.trim();
+    if(!customer || !item){
+      var err = $('orderFormError');
+      err.textContent = 'Customer name and item are required.';
+      err.style.display='block';
+      return;
+    }
+    var fields = {
+      Customer: customer,
+      Phone: $('fPhone').value.trim(),
+      Item: item,
+      Quantity: $('fQty').value.trim(),
+      Priority: $('fPriority').value,
+      AssignedTo: $('fAssignee').value.trim(),
+      Notes: $('fNotes').value.trim(),
+      Stage: currentStageSelection()
+    };
+
+    if(state.editingOrderId){
+      var o = state.orders.find(function(x){ return x.OrderID===state.editingOrderId; });
+      var backup = Object.assign({}, o);
+      Object.assign(o, fields);
+      render();
+      closeOrderModal();
+      apiPost({ action:'update', orderId:state.editingOrderId, updates:fields })
+        .then(function(){ rebuildPeopleList(); checkRushAlarms(); })
+        .catch(function(){ Object.assign(o, backup); render(); });
+    } else {
+      var tempId = 'NP-' + Date.now();
+      var newOrder = Object.assign({ OrderID: tempId, CreatedAt: new Date().toISOString(), UpdatedAt: new Date().toISOString() }, fields);
+      state.orders.push(newOrder);
+      render();
+      rebuildPeopleList();
+      closeOrderModal();
+      apiPost({ action:'add', order: fields })
+        .then(function(res){
+          if(res.order && res.order.OrderID){ newOrder.OrderID = res.order.OrderID; render(); }
+          if(!state.demoMode) refreshOrders();
+        })
+        .catch(function(){
+          state.orders = state.orders.filter(function(x){ return x.OrderID!==tempId; });
+          render();
+        });
+    }
+  }
+
+  function deleteOrder(){
+    if(!state.editingOrderId) return;
+    var id = state.editingOrderId;
+    var order = state.orders.find(function(x){ return x.OrderID===id; });
+    var label = order ? (order.Customer + ' — ' + order.Item) : id;
+    var ok = window.confirm('Delete this order?\n\n' + label + '\n\nThis removes it from the Google Sheet and cannot be undone.');
+    if(!ok) return;
+
+    var backupList = state.orders.slice();
+    state.orders = state.orders.filter(function(x){ return x.OrderID!==id; });
+    render();
+    closeOrderModal();
+
+    apiPost({ action:'delete', orderId:id })
+      .then(function(){ rebuildPeopleList(); })
+      .catch(function(){
+        state.orders = backupList;
+        render();
+      });
+  }
+
+  // ---------- settings ----------
+  function openSettings(){
+    $('settingsUrl').value = state.scriptUrl;
+    $('settingsError').style.display='none';
+    $('settingsOverlay').classList.add('open');
+  }
+  function closeSettings(){ $('settingsOverlay').classList.remove('open'); }
+
+  function saveSettings(){
+    var url = $('settingsUrl').value.trim();
+    if(!url || url.indexOf('http')!==0){
+      var err = $('settingsError');
+      err.textContent = 'Enter a valid Apps Script web app URL.';
+      err.style.display='block';
+      return;
+    }
+    state.demoMode = false;
+    state.scriptUrl = url;
+    saveConfig(url);
+    closeSettings();
+    showSetupOrBoard();
+    refreshOrders();
+  }
+
+  // ---------- setup / boot ----------
+  function showSetupOrBoard(){
+    var connected = state.demoMode || !!state.scriptUrl;
+    $('setupScreen').style.display = connected ? 'none' : 'block';
+    $('toolbar').style.display = connected ? 'flex' : 'none';
+    $('board').style.display = connected ? 'flex' : 'none';
+    if(state.demoMode){
+      setSync('','Demo mode');
+      showBanner('You are viewing demo data. Connect a Google Sheet in settings to track real orders.', 'info');
+    } else if(!state.scriptUrl){
+      setSync('','Not connected');
+    }
+  }
+
+  // ---------- Rush order alerts ----------
+  var RUSH_SCHEDULE_KEY = 'noblePrintRushSchedule';
+  var ALERTS_ENABLED_KEY = 'noblePrintAlertsEnabled';
+  var HOUR_MS = 60 * 60 * 1000;
+  var SNOOZE_MS = 5 * 60 * 1000;
+  var POLL_MS = 90 * 1000; // 90s — within the 1-2 min range
+
+  var audioCtx = null;
+  var alarmOsc = null;
+  var alarmGain = null;
+  var alarmIntervalId = null;
+  var audioUnlocked = false;
+
+  var rushQueue = [];
+  var ringingOrderId = null;
+
+  function isRushOrder(o){
+    return (o.Priority || '').toString().trim().toUpperCase() === 'RUSH';
+  }
+
+  function loadRushSchedule(){
+    try { return JSON.parse(localStorage.getItem(RUSH_SCHEDULE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveRushSchedule(sched){
+    try { localStorage.setItem(RUSH_SCHEDULE_KEY, JSON.stringify(sched)); }
+    catch(e){ /* storage unavailable — alerts still work for this session */ }
+  }
+
+  function isIOS(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function isStandalone(){
+    return window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+  }
+
+  // ---- audio: two-tone siren built with Web Audio API (no external files) ----
+  function ensureAudioContext(){
+    if(!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function unlockAudio(){
+    var ctx = ensureAudioContext();
+    if(!ctx) return;
+    try{
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      gain.gain.value = 0.0001;
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.05);
+    }catch(e){}
+    audioUnlocked = true;
+  }
+
+  function startAlarmSound(){
+    var ctx = ensureAudioContext();
+    if(!ctx) return;
+    stopAlarmSound();
+    alarmOsc = ctx.createOscillator();
+    alarmGain = ctx.createGain();
+    alarmOsc.type = 'square';
+    alarmGain.gain.value = 0.16;
+    alarmOsc.connect(alarmGain).connect(ctx.destination);
+    var high = true;
+    alarmOsc.frequency.setValueAtTime(880, ctx.currentTime);
+    alarmOsc.start();
+    alarmIntervalId = setInterval(function(){
+      high = !high;
+      if(alarmOsc){ alarmOsc.frequency.setValueAtTime(high ? 880 : 660, ctx.currentTime); }
+    }, 420);
+  }
+
+  function stopAlarmSound(){
+    if(alarmIntervalId){ clearInterval(alarmIntervalId); alarmIntervalId = null; }
+    if(alarmOsc){ try{ alarmOsc.stop(); }catch(e){} try{ alarmOsc.disconnect(); }catch(e){} alarmOsc = null; }
+    if(alarmGain){ try{ alarmGain.disconnect(); }catch(e){} alarmGain = null; }
+  }
+
+  // Resume the audio context on any tap, in case the browser suspended it.
+  document.addEventListener('click', function(){
+    if(state.alertsEnabled && audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  });
+
+  // ---- notifications ----
+  function sendRushNotification(order){
+    if(!('Notification' in window) || Notification.permission !== 'granted') return;
+    var title = 'Rush order — ' + (order.Customer || 'Untitled order');
+    var body = (order.Item || '') + (order.Quantity ? ' · Qty ' + order.Quantity : '') + ' · ' + (order.Stage || '');
+    var opts = { body: body, tag: 'rush-' + order.OrderID, icon: 'icon-192.png', badge: 'icon-192.png', requireInteraction: true, vibrate: [200,100,200] };
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(function(reg){ reg.showNotification(title, opts); }).catch(function(){});
+    } else {
+      try{ new Notification(title, opts); }catch(e){}
+    }
+  }
+
+  // ---- scheduling ----
+  var ALERT_WINDOW_START_HOUR = 7;  // 7 AM
+  var ALERT_WINDOW_END_HOUR = 22;   // 10 PM
+
+  function isWithinAlertWindow(){
+    var hour = new Date().getHours();
+    return hour >= ALERT_WINDOW_START_HOUR && hour < ALERT_WINDOW_END_HOUR;
+  }
+
+  function checkRushAlarms(){
+    if(!state.alertsEnabled) return;
+    if(!isWithinAlertWindow()) return;
+    var now = Date.now();
+    var sched = loadRushSchedule();
+    state.orders.forEach(function(o){
+      if(!isRushOrder(o)) return;
+      var nextAt = sched[o.OrderID] || 0;
+      if(now >= nextAt && rushQueue.indexOf(o.OrderID) === -1 && ringingOrderId !== o.OrderID){
+        rushQueue.push(o.OrderID);
+      }
+    });
+    if(!ringingOrderId && rushQueue.length){ ringNext(); }
+  }
+
+  function ringNext(){
+    if(!rushQueue.length) return;
+    var orderId = rushQueue.shift();
+    var order = state.orders.find(function(x){ return x.OrderID === orderId; });
+    if(!order || !isRushOrder(order)){ ringNext(); return; }
+    ringingOrderId = orderId;
+    showRushModal(order);
+    startAlarmSound();
+    sendRushNotification(order);
+  }
+
+  function resolveRushAlarm(snoozeMs){
+    var orderId = ringingOrderId;
+    stopAlarmSound();
+    $('rushOverlay').classList.remove('open');
+    if(orderId){
+      var sched = loadRushSchedule();
+      sched[orderId] = Date.now() + (snoozeMs || HOUR_MS);
+      saveRushSchedule(sched);
+    }
+    ringingOrderId = null;
+    setTimeout(ringNext, 400);
+  }
+
+  function showRushModal(order){
+    $('rushOid').textContent = order.OrderID;
+    $('rushCustomer').textContent = order.Customer || 'Untitled order';
+    $('rushItem').textContent = (order.Item || '') + (order.Quantity ? ' · Qty ' + order.Quantity : '');
+    $('rushStage').textContent = order.Stage || '';
+    $('rushOverlay').classList.add('open');
+  }
+
+  function updateAlertsButton(){
+    var btn = $('alertsBtn');
+    var badge = $('alertsBadge');
+    btn.classList.toggle('on', state.alertsEnabled);
+    btn.title = state.alertsEnabled ? 'Rush alerts on · active 7 AM–10 PM' : 'Enable rush order alerts (7 AM–10 PM)';
+    var rushCount = state.orders.filter(isRushOrder).length;
+    if(rushCount > 0){ badge.style.display = 'flex'; badge.textContent = rushCount; }
+    else { badge.style.display = 'none'; }
+  }
+
+  function enableAlerts(){
+    unlockAudio();
+    state.alertsEnabled = true;
+    try{ localStorage.setItem(ALERTS_ENABLED_KEY, '1'); }catch(e){}
+
+    if(!('Notification' in window)){
+      if(isIOS() && !isStandalone()){
+        showBanner('Sound and in-app alerts are on. For phone notifications too, add this page to your Home Screen first (Share → Add to Home Screen), then reopen it from that icon and enable alerts again — iOS only allows notifications from installed web apps.', 'info');
+      }
+      updateAlertsButton();
+      checkRushAlarms();
+      return;
+    }
+
+    Notification.requestPermission().then(function(perm){
+      if(perm !== 'granted'){
+        showBanner('Notifications were not granted, so you\u2019ll still get the in-app sound and popup while this page is open, but not phone notifications.', 'info');
+      } else {
+        clearBanner();
+      }
+      updateAlertsButton();
+      checkRushAlarms();
+    }).catch(function(){
+      updateAlertsButton();
+      checkRushAlarms();
+    });
+  }
+
+  function toggleAlerts(){
+    if(state.alertsEnabled){
+      state.alertsEnabled = false;
+      try{ localStorage.setItem(ALERTS_ENABLED_KEY, '0'); }catch(e){}
+      updateAlertsButton();
+    } else {
+      enableAlerts();
+    }
+  }
+
+  function restoreAlertsPreference(){
+    var wanted = false;
+    try{ wanted = localStorage.getItem(ALERTS_ENABLED_KEY) === '1'; }catch(e){}
+    if(wanted){
+      state.alertsEnabled = true;
+      // Audio needs a fresh user gesture on reload; permission (if granted) already persists.
+      updateAlertsButton();
+    }
+  }
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+
+  setInterval(function(){
+    if(!state.alertsEnabled) return;
+    if(state.demoMode){ checkRushAlarms(); }
+    else { refreshOrders(); }
+  }, POLL_MS);
+
+  function wireEvents(){
+    $('newOrderBtn').addEventListener('click', openNew);
+    $('closeOrderModal').addEventListener('click', closeOrderModal);
+    $('cancelOrderBtn').addEventListener('click', closeOrderModal);
+    $('saveOrderBtn').addEventListener('click', saveOrder);
+    $('deleteOrderBtn').addEventListener('click', deleteOrder);
+    $('orderOverlay').addEventListener('click', function(e){ if(e.target.id==='orderOverlay') closeOrderModal(); });
+
+    $('settingsBtn').addEventListener('click', openSettings);
+    $('closeSettingsModal').addEventListener('click', closeSettings);
+    $('saveSettingsBtn').addEventListener('click', saveSettings);
+    $('settingsOverlay').addEventListener('click', function(e){ if(e.target.id==='settingsOverlay') closeSettings(); });
+
+    $('refreshBtn').addEventListener('click', function(){ if(!state.demoMode) refreshOrders(); });
+    $('alertsBtn').addEventListener('click', toggleAlerts);
+    $('rushSnoozeBtn').addEventListener('click', function(){ resolveRushAlarm(SNOOZE_MS); });
+    $('rushDismissBtn').addEventListener('click', function(){ resolveRushAlarm(HOUR_MS); });
+
+    $('searchInput').addEventListener('input', function(e){ state.search = e.target.value; render(); });
+    $('assigneeFilter').addEventListener('change', function(e){ state.assigneeFilter = e.target.value; render(); });
+    $('priorityFilter').addEventListener('change', function(e){ state.priorityFilter = e.target.value; render(); });
+
+    $('setupConnectBtn').addEventListener('click', function(){
+      var url = $('setupUrl').value.trim();
+      if(!url || url.indexOf('http')!==0){ showBanner('Enter a valid Apps Script web app URL first.', 'error'); return; }
+      state.demoMode = false;
+      state.scriptUrl = url;
+      saveConfig(url);
+      clearBanner();
+      showSetupOrBoard();
+      refreshOrders();
+    });
+    $('setupDemoBtn').addEventListener('click', function(){
+      state.demoMode = true;
+      state.orders = demoOrders();
+      rebuildPeopleList();
+      showSetupOrBoard();
+      render();
+      checkRushAlarms();
+    });
+
+    var guideOpeners = ['setupGuideBtn','viewGuideFromSettings'];
+    guideOpeners.forEach(function(id){
+      $(id).addEventListener('click', function(){ $('guideOverlay').classList.add('open'); });
+    });
+    $('closeGuideModal').addEventListener('click', function(){ $('guideOverlay').classList.remove('open'); });
+    $('closeGuideModal2').addEventListener('click', function(){ $('guideOverlay').classList.remove('open'); });
+    $('guideOverlay').addEventListener('click', function(e){ if(e.target.id==='guideOverlay') $('guideOverlay').classList.remove('open'); });
+  }
+
+  function boot(){
+    wireEvents();
+    restoreAlertsPreference();
+    loadConfig().then(function(){
+      showSetupOrBoard();
+      if(state.scriptUrl){ refreshOrders(); }
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
