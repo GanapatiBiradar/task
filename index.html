@@ -260,6 +260,8 @@
   .prio.high{ background:#FBE2E2; color:var(--danger); }
   .prio.normal{ background:transparent; color:#9a9689; }
   .prio.rush{ background:#FDEBC8; color:#8a5b00; }
+  .prio.hold{ background:#E4E7F0; color:#3B4A72; }
+  .card-hold{ opacity:0.68; border-style:dashed; }
   .card .customer{
     font-weight:600;
     font-size:13.5px;
@@ -527,6 +529,7 @@
     <option value="Rush">Rush</option>
     <option value="High">High</option>
     <option value="Normal">Normal</option>
+    <option value="Hold">Hold</option>
   </select>
   <div class="stat-strip" id="statStrip"></div>
 </div>
@@ -568,6 +571,7 @@
             <option>Normal</option>
             <option>High</option>
             <option>Rush</option>
+            <option>Hold</option>
           </select>
         </div>
       </div>
@@ -887,11 +891,12 @@
   }
 
   function cardHtml(o, stageIdx){
-    var prioClass = o.Priority==='Rush' ? 'rush' : o.Priority==='High' ? 'high' : 'normal';
+    var prioClass = o.Priority==='Rush' ? 'rush' : o.Priority==='High' ? 'high' : o.Priority==='Hold' ? 'hold' : 'normal';
+    var isHold = o.Priority==='Hold';
     var canPrev = stageIdx>0;
     var canNext = stageIdx<STAGES.length-1;
     return (
-      '<div class="card" style="border-left-color:'+stageColor(o.Stage)+'" data-open="'+escapeHtml(o.OrderID)+'">' +
+      '<div class="card'+(isHold?' card-hold':'')+'" style="border-left-color:'+stageColor(o.Stage)+'" data-open="'+escapeHtml(o.OrderID)+'">' +
         '<div class="oid"><span>'+escapeHtml(o.OrderID)+'</span>' +
           (o.Priority && o.Priority!=='Normal' ? '<span class="prio '+prioClass+'">'+escapeHtml(o.Priority)+'</span>' : '') +
         '</div>' +
