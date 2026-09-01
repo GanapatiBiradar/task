@@ -1193,8 +1193,17 @@
   }
 
   // ---- scheduling ----
+  var ALERT_WINDOW_START_HOUR = 7;  // 7 AM
+  var ALERT_WINDOW_END_HOUR = 22;   // 10 PM
+
+  function isWithinAlertWindow(){
+    var hour = new Date().getHours();
+    return hour >= ALERT_WINDOW_START_HOUR && hour < ALERT_WINDOW_END_HOUR;
+  }
+
   function checkRushAlarms(){
     if(!state.alertsEnabled) return;
+    if(!isWithinAlertWindow()) return;
     var now = Date.now();
     var sched = loadRushSchedule();
     state.orders.forEach(function(o){
@@ -1243,7 +1252,7 @@
     var btn = $('alertsBtn');
     var badge = $('alertsBadge');
     btn.classList.toggle('on', state.alertsEnabled);
-    btn.title = state.alertsEnabled ? 'Rush alerts on' : 'Enable rush order alerts';
+    btn.title = state.alertsEnabled ? 'Rush alerts on · active 7 AM–10 PM' : 'Enable rush order alerts (7 AM–10 PM)';
     var rushCount = state.orders.filter(isRushOrder).length;
     if(rushCount > 0){ badge.style.display = 'flex'; badge.textContent = rushCount; }
     else { badge.style.display = 'none'; }
